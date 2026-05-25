@@ -12,25 +12,44 @@ import matplotlib.pyplot as plt
 plt.style.context('default')
 warnings.simplefilter("ignore", ResourceWarning)
 
-model_dir = Path("/mnt/hd1/home/ankitray/scFM/scFM_pertubation/scGPT_CP")
+# Accept argument liver or immune
+if len(sys.argv) != 2 or sys.argv[1] not in ["liver", "immune"]:
+    print("Usage: python generate_embedding_script.py [liver|immune]")
+    sys.exit(1)
+
+# Read in the argument
+analysis_type = sys.argv[1]
+
+model_dir = Path("/mnt/hd1/home/ankitray/scFM/scGPT_CP")
 
 # Set Base directory to the location of this script
 BASE = Path('/mnt/hd1/home/ankitray/scFM/')
 
+# If liver set the liver data directory, cell type key as liver and out path as liver
+if analysis_type == "liver":
+    cell_type_key = "typist_liver_majority_voting"
+    out_path = Path('/mnt/hd1/home/ankitray/scFM/data/liver_cell_type_adata_embedded/')
+    data_dir = BASE / 'data/liver_cell_type_adata'
+elif analysis_type == "immune":
+    cell_type_key = "typist_immune_majority_voting"
+    out_path = Path('/mnt/hd1/home/ankitray/scFM/data/immune_cell_type_adata_embedded/')
+    data_dir = BASE / 'data/immune_cell_type_adata'
+
+
 # Set working directory to the location of this script 
 # data_dir = BASE / 'h5s_common_directory'
-liver_data_dir = BASE / 'data/liver_cell_type_adata'
+# data_dir = BASE / 'data/liver_cell_type_adata'
 
 # Read in each h5ad file with the Anndata object variable name being it's file name without the extension and store in dictionary
 adata_dict = {}
 
-for h5ad_file in liver_data_dir.glob('*.h5ad'):
+for h5ad_file in data_dir.glob('*.h5ad'):
     adata_name = h5ad_file.stem  # Get file name without extension
     adata_dict[adata_name] = ad.read_h5ad(h5ad_file)  # Read h5ad file and store in dictionary
 
 
 gene_col = "Gene Symbol"
-cell_type_key = "typist_liver_majority_voting"
+# cell_type_key = "typist_liver_majority_voting"
 batch_key = "GSE"
 N_HVG = 5000
 
@@ -49,7 +68,7 @@ import torch
 # Check if Torch Cuda is available
 torch.cuda.is_available()
 
-model_dir = Path("/mnt/hd1/home/ankitray/scFM/scFM_pertubation/scGPT_CP")
+model_dir = Path("/mnt/hd1/home/ankitray/scFM/scGPT_CP")
 for adata_name, adata in adata_dict.items():
     print(f"Generating embeddings for {adata_name}...")
     embed_adata = scg.tasks.embed_data(
@@ -64,7 +83,7 @@ for adata_name, adata in adata_dict.items():
 # Set Base directory to the grandparent location of this script
 BASE = Path('/mnt/hd1/home/ankitray/scFM/')
 
-out_path = BASE / "data/liver_cell_type_adata_embedded/"
+# out_path = BASE / "data/liver_cell_type_adata_embedded/"
 # Make directory if it doesn't exist
 out_path.mkdir(parents=True, exist_ok=True)
 
